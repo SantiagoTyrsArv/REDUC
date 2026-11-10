@@ -62,6 +62,9 @@ erDiagram
 | length_m | real | |
 | kind | text | `sidewalk`, `footway`, `path`, `crossing`, `steps`, `ramp`, `elevator`, `road_shoulder` |
 | tags | jsonb | `surface`, `smoothness`, `width`, `incline`, `wheelchair`... |
+| slope_pct / max_slope_pct | real NULL | salida de la etapa `elevation`, con signo source→target; NULL si el MDE no cubre el tramo |
+| slope_source | text NULL | `dem`, `dem_lowres` (celda > 10 m, baja la confianza) u `osm_incline` (la etiqueta gana al MDE) |
+| overrides | jsonb | atributos medidos en campo (`PATCH /edges/{id}/accessibility`); tienen prioridad sobre todo lo calculado y sobreviven a recalcular |
 
 ### edge_accessibility (1:1 con edge, recalculable)
 | Columna | Tipo | Notas |
