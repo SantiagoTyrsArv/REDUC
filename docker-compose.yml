@@ -62,6 +62,8 @@ services:
     build:
       context: ./backend
     command: uv run --no-sync uvicorn reduc.api.main:app --host 0.0.0.0 --port 8000
+    volumes:
+      - ./data:/app/data:ro
     env_file:
       - path: .env
         required: false
@@ -94,6 +96,8 @@ services:
     build:
       context: ./backend
     command: uv run --no-sync dramatiq reduc.worker.main --processes 1 --threads 2
+    volumes:
+      - ./data:/app/data:ro
     environment:
       REDUC_DATABASE_URL: postgresql+psycopg://reduc:reduc@db:5432/reduc
       REDUC_REDIS_URL: redis://redis:6379/0

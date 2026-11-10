@@ -23,3 +23,6 @@ web-build/
 *.aab
 *.ipa
 .env.local
+
+# Datos locales de regiones (extractos OSM, MDE): no van al repositorio
+/data/
