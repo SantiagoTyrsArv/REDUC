@@ -28,6 +28,11 @@ class Settings(BaseSettings):
     model_detector_version: str = "det-v0.1.0"
     model_surface_version: str = "surf-v0.1.0"
     detector_backend: str = "fake"
+    #: Directory that holds local data files referenced by region configs (OSM extracts, DEMs).
+    data_dir: str = "data"
+    overpass_endpoint: str = ""
+    #: `redis` in deployments; `stub` keeps the queue in memory for tests and tooling.
+    worker_broker: str = "redis"
 
     @property
     def cors_origin_list(self) -> list[str]:
