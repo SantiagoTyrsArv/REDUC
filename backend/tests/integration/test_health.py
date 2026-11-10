@@ -77,3 +77,17 @@ def test_route_rate_limit() -> None:
     assert response.status_code == 429
     assert response.json()["type"] == "rate_limited"
     assert response.headers["retry-after"] == "60"
+
+
+def test_metrics_label_routes_not_raw_paths() -> None:
+    """Arbitrary URLs must not create one time series each (label cardinality stays bounded)."""
+    client = make_client()
+
+    for index in range(5):
+        assert client.get(f"/no-such-path-{index}").status_code == 404
+    client.get("/v1/health")
+    metrics = client.get("/metrics").text
+
+    assert "no-such-path" not in metrics
+    assert 'path="unmatched"' in metrics
+    assert 'path="/v1/health"' in metrics
