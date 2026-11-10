@@ -57,3 +57,26 @@ class PipelineRunOut(BaseModel):
     created_at: datetime
     started_at: datetime | None
     finished_at: datetime | None
+
+
+class MapVersionAdminOut(BaseModel):
+    id: uuid.UUID
+    region_id: uuid.UUID
+    number: int
+    status: Literal["draft", "published", "archived"]
+    created_at: datetime
+    published_at: datetime | None
+    notes: str | None
+    edges: int
+    barriers: int
+    unverified_barriers: int
+
+
+class ValidationIssueOut(BaseModel):
+    code: str
+    detail: str
+
+
+class ValidationOut(BaseModel):
+    publishable: bool
+    issues: list[ValidationIssueOut]

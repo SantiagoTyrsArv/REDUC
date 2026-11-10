@@ -118,7 +118,8 @@ Ambas filtran por la versión publicada de cada región (funciones SQL en `db/ti
 | `POST /barriers` | verifier | crear barrera manual `{class,location,attributes,image_id?}` |
 | `PATCH /edges/{id}/accessibility` | verifier | sobrescribir atributos medidos en campo (p. ej. pendiente con inclinómetro) |
 | `GET /map-versions?region=` | admin | |
-| `POST /map-versions/{id}/publish` | admin | valida (§4) y publica |
+| `GET /map-versions/{id}/validation` | admin | simulacro de §4: `{publishable, issues:[{code,detail}]}` |
+| `POST /map-versions/{id}/publish` | admin | valida (§4) y publica; 422 con `extra.issues` si falla, 409 si no es borrador o si tiene una ejecución del pipeline en curso |
 | `GET /metrics/region/{id}` | admin | cobertura, verificados, distribución de clases, precisión estimada |
 
 Autenticación: cabecera `Authorization: Bearer <access_token>` (HS256, 15 min; refresh 7 días). El rol se lee de la base de datos en cada petición, así que desactivar un usuario lo expulsa de inmediato, y cambiar su contraseña o rol (`app_user.token_version`) invalida todos sus tokens anteriores; `admin` incluye los permisos de `verifier`. `login` y `refresh` están limitados a 10 intentos/min por IP (`rate_limited`). Si `REDUC_JWT_SECRET` falta o tiene menos de 32 bytes, la API no emite ni acepta tokens y responde 503 `auth_unavailable`. Los usuarios se crean con `scripts/create_admin.py` (la contraseña se lee de `REDUC_ADMIN_PASSWORD` o se pide por consola; mínimo 12 caracteres).
@@ -130,6 +131,10 @@ Ejecuciones: solo puede haber una activa por región (`409 conflict`). `map_vers
 - El grafo es conexo en ≥ 95 % de nodos (componente gigante).
 - Ninguna barrera `critical` con `confidence ≥ 0.8` está sin asociar a tramo/nodo.
 - Pruebas de rutas de regresión de la región (`region.config.regression_routes`) pasan.
+
+Códigos de `issues`: `empty_graph`, `missing_accessibility`, `disconnected_graph`, `unassociated_critical_barrier`, `regression_failed`, `regression_invalid`. Una barrera rechazada no bloquea la publicación.
+
+Cada ruta de regresión: `{name?, origin, destination, profile, max_distance_m?, must_avoid_barrier_ids?, must_avoid_points?}`. `profile` es el nombre de una plantilla o un perfil completo. Los ids de barrera cambian al regenerar una versión, así que un id que no exista en la versión evaluada cuenta como fallo; `must_avoid_points` (`[lon,lat]`, la ruta no puede pasar a menos de 3 m) es la forma estable de expresar "no pasar por aquí".
 
 ## 5. Paginación
 Cursor: `?limit=50&cursor=<opaco>` → `{"items":[...],"next_cursor":"…"|null}`.

@@ -10,7 +10,7 @@ from reduc.api.errors import register_error_handlers
 from reduc.api.logging import configure_logging
 from reduc.api.middleware import limit_route_requests, observe_request
 from reduc.api.rate_limit import RateLimiter, RedisRateLimiter
-from reduc.api.routers import admin_auth, admin_pipeline, public
+from reduc.api.routers import admin_auth, admin_pipeline, admin_versions, public
 from reduc.api.schemas.public import HealthOut
 from reduc.settings import Settings, get_settings
 
@@ -47,6 +47,7 @@ def create_app(
     app.include_router(public.router)
     app.include_router(admin_auth.router)
     app.include_router(admin_pipeline.router)
+    app.include_router(admin_versions.router)
 
     @app.get("/v1/health", response_model=HealthOut, tags=["public"])
     def health() -> dict[str, str]:

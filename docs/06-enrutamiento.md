@@ -77,5 +77,5 @@ La función vive en `core/routing/cost.py` como **una sola fuente de verdad** qu
 
 ## 6. Pruebas obligatorias
 - Grafo sintético (seed) con casos: escalera evitada, pendiente en un sentido permitida y en el otro no, cruce sin rampa, ancho insuficiente, sin ruta posible → fallback.
-- Regresión por región: `region.config.regression_routes` = lista de `{origin, destination, profile, must_avoid_barrier_ids, max_distance_m}`.
+- Regresión por región: `region.config.regression_routes` = lista de `{origin, destination, profile, must_avoid_barrier_ids, max_distance_m}`. También admite `must_avoid_points` (ver `04 §4`).
 - Rendimiento: 100 pares aleatorios en el campus, p95 < 800 ms.
