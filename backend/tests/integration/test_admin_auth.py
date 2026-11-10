@@ -1,6 +1,7 @@
 """Admin authentication over the real database (T-23)."""
 
 from fastapi import FastAPI
+from scripts.create_admin import upsert_user
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session
@@ -115,3 +116,19 @@ def test_without_a_strong_secret_no_token_is_issued_or_accepted(shared_engine: E
 
     assert (response.status_code, me.status_code) == (503, 503)
     assert JWT_SECRET not in response.text
+
+
+def test_changing_the_password_revokes_existing_sessions(shared_engine: Engine) -> None:
+    with temporary_user(shared_engine) as (email, _), admin_client(shared_engine) as client:
+        old = login(client, email)
+        with Session(shared_engine) as session:
+            upsert_user(session, email, "otra-clave-larga-distinta", "admin")
+            session.commit()
+
+        stale_access = client.get("/v1/admin/auth/me", headers={"Authorization": f"Bearer {old['access_token']}"})
+        stale_refresh = client.post("/v1/admin/auth/refresh", json={"refresh_token": old["refresh_token"]})
+        fresh = login(client, email, "otra-clave-larga-distinta")
+        current = client.get("/v1/admin/auth/me", headers={"Authorization": f"Bearer {fresh['access_token']}"})
+
+    assert (stale_access.status_code, stale_refresh.status_code) == (401, 401)
+    assert current.status_code == 200

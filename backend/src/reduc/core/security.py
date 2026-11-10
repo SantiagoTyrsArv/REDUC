@@ -35,6 +35,8 @@ class TokenClaims:
     role: str
     kind: TokenKind
     expires_at: datetime
+    #: Must match `app_user.token_version`; a password or role change invalidates older tokens.
+    version: int
 
 
 def hash_password(password: str) -> str:
@@ -62,13 +64,20 @@ def _require_secret(secret: str) -> str:
 
 
 def create_token(
-    secret: str, user_id: uuid.UUID, role: str, kind: TokenKind, lifetime: timedelta, now: datetime | None = None
+    secret: str,
+    user_id: uuid.UUID,
+    role: str,
+    kind: TokenKind,
+    lifetime: timedelta,
+    now: datetime | None = None,
+    version: int = 0,
 ) -> str:
     issued = now or datetime.now(UTC)
     payload: dict[str, Any] = {
         "sub": str(user_id),
         "role": role,
         "typ": kind,
+        "ver": version,
         "iss": ISSUER,
         "iat": issued,
         "exp": issued + lifetime,
@@ -85,7 +94,7 @@ def decode_token(secret: str, token: str, kind: TokenKind) -> TokenClaims:
             _require_secret(secret),
             algorithms=[ALGORITHM],
             issuer=ISSUER,
-            options={"require": ["exp", "iat", "sub", "typ", "role", "iss"]},
+            options={"require": ["exp", "iat", "sub", "typ", "role", "iss", "ver"]},
         )
         if payload["typ"] != kind or payload["role"] not in ROLES:
             raise InvalidTokenError("wrong token kind")
@@ -94,6 +103,7 @@ def decode_token(secret: str, token: str, kind: TokenKind) -> TokenClaims:
             role=str(payload["role"]),
             kind=kind,
             expires_at=datetime.fromtimestamp(int(payload["exp"]), UTC),
+            version=int(payload["ver"]),
         )
-    except (jwt.PyJWTError, ValueError, KeyError) as error:
+    except (jwt.PyJWTError, ValueError, KeyError, TypeError) as error:
         raise InvalidTokenError(str(error)) from error

@@ -37,6 +37,8 @@ def upsert_user(session: Session, email: str, password: str, role: str = "admin"
         user.password_hash = password_hash
         user.role = role
         user.is_active = True
+        # A new password or role must end every session opened with the old ones.
+        user.token_version += 1
     session.flush()
     return user, created
 

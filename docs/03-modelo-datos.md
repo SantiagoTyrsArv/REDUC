@@ -147,7 +147,7 @@ erDiagram
 | id uuid PK | region_id FK | name text | category text (`building`,`entrance`,`toilet`,`parking`,`service`) | geom Point | accessible_entrance bool | tags jsonb | search_vector tsvector (GIN) |
 
 ### app_user (solo panel admin)
-| id uuid PK | email citext UNIQUE | password_hash text | role text (`admin`,`verifier`) | is_active bool |
+| id uuid PK | email citext UNIQUE | password_hash text | role text (`admin`,`verifier`) | is_active bool | token_version int (va en cada JWT; al incrementarlo se revocan las sesiones) |
 
 ### pipeline_run / pipeline_stage_run
 - `pipeline_run`: id, region_id, map_version_id, requested_by, status (`queued`,`running`,`succeeded`,`failed`,`cancelled`), params jsonb, started_at, finished_at.

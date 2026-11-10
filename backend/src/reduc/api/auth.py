@@ -46,7 +46,7 @@ def current_user(credentials: CredentialsDep, session: SessionDep, settings: Set
     except InvalidTokenError as error:
         raise unauthorized() from error
     user = session.get(AppUser, claims.user_id)
-    if user is None or not user.is_active:
+    if user is None or not user.is_active or user.token_version != claims.version:
         raise unauthorized()
     return user
 

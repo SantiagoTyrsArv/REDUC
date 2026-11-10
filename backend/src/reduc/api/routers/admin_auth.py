@@ -30,9 +30,16 @@ def _token_pair(settings: Settings, user: AppUser) -> TokenPairOut:
     access = timedelta(minutes=settings.jwt_access_minutes)
     try:
         return TokenPairOut(
-            access_token=create_token(settings.jwt_secret, user.id, user.role, "access", access),
+            access_token=create_token(
+                settings.jwt_secret, user.id, user.role, "access", access, version=user.token_version
+            ),
             refresh_token=create_token(
-                settings.jwt_secret, user.id, user.role, "refresh", timedelta(days=settings.jwt_refresh_days)
+                settings.jwt_secret,
+                user.id,
+                user.role,
+                "refresh",
+                timedelta(days=settings.jwt_refresh_days),
+                version=user.token_version,
             ),
             expires_in=int(access.total_seconds()),
         )
@@ -63,7 +70,7 @@ async def login(body: LoginRequest, request: Request, session: SessionDep, setti
 
 @router.post("/refresh", response_model=TokenPairOut, responses=ERRORS)
 async def refresh(body: RefreshRequest, request: Request, session: SessionDep, settings: SettingsDep) -> TokenPairOut:
-    """Issue a new token pair. The user must still exist and be active."""
+    """Issue a new token pair. The user must still be active and its sessions not revoked."""
     await _limit_attempts(request)
     try:
         claims = decode_token(settings.jwt_secret, body.refresh_token, "refresh")
@@ -72,7 +79,7 @@ async def refresh(body: RefreshRequest, request: Request, session: SessionDep, s
     except InvalidTokenError as error:
         raise unauthorized() from error
     user = session.get(AppUser, claims.user_id)
-    if user is None or not user.is_active:
+    if user is None or not user.is_active or user.token_version != claims.version:
         raise unauthorized()
     return _token_pair(settings, user)
 
