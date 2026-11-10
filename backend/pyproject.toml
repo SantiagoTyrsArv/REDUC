@@ -70,5 +70,5 @@ mypy_path = "src"
 files = ["src/reduc/core"]
 
 [[tool.mypy.overrides]]
-module = ["boto3.*", "botocore.*", "rasterio.*"]
+module = ["boto3.*", "botocore.*", "rasterio.*", "shapely.*"]
 ignore_missing_imports = true
