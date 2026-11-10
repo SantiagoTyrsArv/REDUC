@@ -149,7 +149,7 @@ def get_published_barrier(session: Session, barrier_id: uuid.UUID) -> BarrierDet
                 JOIN region r ON r.published_version_id = b.map_version_id AND r.is_active
                 LEFT JOIN detection d ON d.id = b.representative_detection_id
                 LEFT JOIN image i ON i.id = d.image_id
-                WHERE b.id = :barrier_id
+                WHERE b.id = :barrier_id AND b.verification_status <> 'rejected'
                 """
             ),
             {"barrier_id": barrier_id},
