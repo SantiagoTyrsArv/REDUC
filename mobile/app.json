@@ -1,0 +1,40 @@
+{
+  "expo": {
+    "name": "REDUC",
+    "slug": "app-reduc",
+    "version": "0.1.0",
+    "scheme": "reduc",
+    "orientation": "default",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "bundleIdentifier": "app.reduc.mobile",
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "REDUC usa tu ubicación para calcular rutas accesibles desde donde estás y guiarte durante el recorrido."
+      }
+    },
+    "android": {
+      "package": "app.reduc.mobile",
+      "permissions": ["ACCESS_COARSE_LOCATION", "ACCESS_FINE_LOCATION"]
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-localization",
+      "@maplibre/maplibre-react-native",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "REDUC usa tu ubicación para calcular rutas accesibles desde donde estás y guiarte durante el recorrido."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": false
+    }
+  }
+}
