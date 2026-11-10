@@ -256,3 +256,24 @@ def test_barrier_photo_requires_a_permissive_license(client: TestClient, shared_
     assert allowed["attribution"] == "Equipo REDUC"
     assert restricted["photo_url"] is None
     assert restricted["attribution"] is None
+
+
+def test_rejected_barrier_is_not_public(client: TestClient, shared_engine: Engine) -> None:
+    """Same visibility rule as the barrier tiles: rejected barriers are kept only for audit."""
+    with Session(shared_engine) as session:
+        barrier = session.scalar(select(Barrier).where(Barrier.barrier_class == "stairs"))
+        assert barrier is not None
+        barrier_id, previous = barrier.id, barrier.verification_status
+        barrier.verification_status = "rejected"
+        session.commit()
+    try:
+        response = client.get(f"/v1/barriers/{barrier_id}")
+    finally:
+        with Session(shared_engine) as session:
+            session.execute(
+                text("UPDATE barrier SET verification_status = :status WHERE id = :id"),
+                {"status": previous, "id": barrier_id},
+            )
+            session.commit()
+
+    assert response.status_code == 404
