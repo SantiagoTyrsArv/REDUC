@@ -23,3 +23,10 @@ web-build/
 *.aab
 *.ipa
 .env.local
+
+# Datos locales de regiones (extractos OSM, MDE): no van al repositorio
+/data/
+
+# Proyectos nativos generados por expo prebuild
+mobile/android/
+mobile/ios/

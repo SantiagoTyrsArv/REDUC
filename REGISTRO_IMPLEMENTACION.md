@@ -2,15 +2,40 @@
 
 ## Estado al 10 de noviembre de 2026
 
-- **T-01 a T-07:** completadas y verificadas (ver detalle más abajo).
-- **T-08 Narrativa y puntuación, T-09 Endpoints públicos:** código existente verificado el 10-nov: 98 pruebas de backend superadas, 94 % de cobertura, Ruff/formato/mypy correctos.
-- **T-10 Teselas:** `backend/db/tiles.sql` + migración `0002`; añadida `tests/integration/test_tiles.py` (capa, propiedades, solo versión publicada). Verificado además contra Martin real: `/edge_accessibility/15/9642/15964` → 200 con datos.
-- **T-11 Cliente API:** `pnpm gen:api` no produce diferencias; añadido `.github/workflows/ci-api-client.yml` que falla si el cliente está desactualizado. `createApiClient` resuelve `fetch` en cada llamada.
-- **T-12 a T-19 App móvil (Hito 2):** implementadas. 52 pruebas Jest superadas, `tsc` sin errores, exportación web correcta y flujo real comprobado en navegador contra el stack Docker (bienvenida → mapa con capa → búsqueda → rutas → navegación simulada).
-  - Pendiente de validación humana: revisión con TalkBack/VoiceOver (`docs/07 §5.1`) y ejecución de `mobile/e2e/calcular-ruta.yaml` con Maestro sobre un development build (no hay emulador en este equipo).
-  - ESLint/Prettier aún no están instalados en el workspace JS; `lint` es `tsc --noEmit`.
-- **Siguiente tarea:** T-20 (importador OSM), Hito 3.
-- No existe todavía un repositorio Git inicializado; no se han creado ramas, commits ni PR.
+- **T-01 a T-19 (Hitos 0, 1 y 2):** completadas; están en `main`.
+- **T-20 a T-25 y MVP local:** hechas en ramas apiladas, cada una con su PR pendiente de revisión:
+  `fix/seguridad-api` → `feat/T-20-importador-osm` → `feat/T-21-elevacion` → `feat/T-23-auth-admin` →
+  `feat/T-22-orquestacion` → `feat/T-24-versionado` → `feat/T-25-proveedores-imagenes` → `feat/mvp-campus-pasto`.
+  T-23 se adelantó a T-22 porque los endpoints de ejecuciones necesitan autenticación.
+- **Backend en la punta:** ruff, formato y mypy correctos; batería completa en verde con PostGIS real (Testcontainers).
+- **Comprobado con el stack de Docker real:** API → Redis → worker Dramatiq → Overpass → publicación → `POST /v1/routes`.
+- **Pendiente de validación humana (Hito 2):** revisión con TalkBack/VoiceOver (`docs/07 §5.1`) y flujo Maestro.
+- **Siguiente tarea del plan:** T-26 (privacidad). Quedan T-26 a T-40.
+
+## MVP local: Universidad Cooperativa de Colombia, campus Pasto
+
+Región `ucc-pasto` en la base de datos de desarrollo (no en el código ni en el seed):
+
+```bash
+# Dentro del contenedor api (docker compose exec -T api uv run --no-sync python ...)
+scripts/create_admin.py --email <correo>          # contraseña por REDUC_ADMIN_PASSWORD
+scripts/create_region.py --slug ucc-pasto --name "Universidad Cooperativa de Colombia - Campus Pasto"     --center -77.2898981 1.2297579 --radius-m 500 --elevation-path dem/ucc-pasto.tif --active
+# POST /v1/admin/regions/{id}/pipeline-runs  →  POST /v1/admin/map-versions/{id}/publish
+scripts/import_pois.py --slug ucc-pasto
+```
+
+- **Límite de la región:** OSM solo tiene el campus como un punto (nodo en Pandiaco), sin polígono. La región es un
+  cuadrado de 1 km de lado centrado en ese punto; hay que sustituirlo por el polígono real (`--geojson`).
+- **Elevación:** recorte de Copernicus GLO-30 (30 m) en `data/dem/ucc-pasto.tif` (fuera de git). Con esa resolución
+  las pendientes son aproximadas y se marcan `dem_lowres`; Pasto es montañoso, así que conviene un MDE mejor o
+  mediciones con inclinómetro en los tramos críticos.
+- **Sin visión todavía:** no hay barreras detectadas por imágenes; las únicas barreras son las escaleras de OSM.
+  Ningún tramo está verificado.
+- **Resultado de la primera versión:** 819 tramos (305 inaccesibles, 123 con precaución, 391 sin datos suficientes).
+- La región del seed (`campus-piloto`) se desactivó en la base de desarrollo para que la app abra en Pasto;
+  `make seed` la vuelve a crear activa.
+- **App Android:** `mobile/.env.local` apunta a la IP del equipo en la red local; el teléfono debe estar en la misma
+  Wi-Fi y el cortafuegos de Windows debe permitir los puertos 8000 y 3000.
 
 ## Trabajo realizado
 
@@ -145,7 +170,5 @@ npx --yes pnpm@10.22.0 --recursive --if-present test
 
 ## Para reanudar
 
-1. Leer `docs/06-enrutamiento.md` §5 y la tarea T-08 de `docs/09-plan-implementacion.md`.
-2. Implementar `core/routing/narrative.py`: segmentación, avisos, instrucciones y textos i18n `es`/`en`.
-3. Añadir puntuación de accesibilidad, duración por pendiente y métricas de la ruta.
-4. Incorporar pruebas de narrativa y puntuación, y ejecutar todas las validaciones antes de cerrar T-08.
+1. Fusionar los PR apilados en orden (cada uno con commit de fusión para conservar un commit por tarea).
+2. Seguir con T-26 (`docs/09`): desenfoque de rostros/matrículas y limpieza de EXIF en las subidas.
