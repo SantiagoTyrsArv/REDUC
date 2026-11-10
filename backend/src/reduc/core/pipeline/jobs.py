@@ -17,7 +17,13 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from reduc.core.db.models import MapVersion, PipelineRun, PipelineStageRun, Region
 from reduc.core.pipeline.context import PipelineCancelledError, PipelineDeps, StageContext, StageStats
-from reduc.core.pipeline.stages import build_routing_graph, compute_attributes, elevation, import_osm
+from reduc.core.pipeline.stages import (
+    build_routing_graph,
+    compute_attributes,
+    elevation,
+    import_osm,
+    ingest_images,
+)
 
 StageFn = Callable[[StageContext], StageStats]
 
@@ -25,6 +31,7 @@ StageFn = Callable[[StageContext], StageStats]
 STAGES: dict[str, StageFn] = {
     "import_osm": import_osm.run,
     "elevation": elevation.run,
+    "ingest_images": ingest_images.run,
     "compute_attributes": compute_attributes.run,
     "build_routing_graph": build_routing_graph.run,
 }
