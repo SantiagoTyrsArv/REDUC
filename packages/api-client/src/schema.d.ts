@@ -55,7 +55,7 @@ export interface paths {
         put?: never;
         /**
          * Refresh
-         * @description Issue a new token pair. The user must still exist and be active.
+         * @description Issue a new token pair. The user must still be active and its sessions not revoked.
          */
         post: operations["refresh_v1_admin_auth_refresh_post"];
         delete?: never;
