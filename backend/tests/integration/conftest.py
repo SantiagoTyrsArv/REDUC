@@ -1,6 +1,7 @@
 """Shared PostGIS container, migrated and seeded once per test session."""
 
 import os
+import uuid
 from collections.abc import Generator
 from pathlib import Path
 
@@ -8,11 +9,12 @@ import pytest
 from alembic import command
 from alembic.config import Config
 from scripts.seed_dev import seed_dev
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine, select, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session
 from testcontainers.community.postgres import PostgresContainer
 
+from reduc.core.db.models import MapVersion, Region
 from reduc.settings import get_settings
 
 BACKEND_ROOT = Path(__file__).parents[2]
@@ -50,3 +52,14 @@ def db_session(shared_engine: Engine) -> Generator[Session]:
     with Session(shared_engine) as session:
         yield session
         session.rollback()
+
+
+@pytest.fixture
+def draft_version_id(db_session: Session) -> uuid.UUID:
+    """An empty draft version of the seed region, rolled back with the session."""
+    region = db_session.scalars(select(Region)).first()
+    assert region is not None
+    version = MapVersion(region_id=region.id, number=1000, status="draft")
+    db_session.add(version)
+    db_session.flush()
+    return version.id
