@@ -15,13 +15,14 @@ class RateLimiter(Protocol):
 class RedisRateLimiter:
     """Limit route calculations per IP with an atomic Redis counter."""
 
-    def __init__(self, redis_url: str, limit: int = 60) -> None:
+    def __init__(self, redis_url: str, limit: int = 60, scope: str = "routes") -> None:
         self._client = redis.from_url(redis_url, decode_responses=True)
         self._limit = limit
+        self._scope = scope
 
     async def allows(self, client_ip: str) -> bool:
         """Consume one request from the current one-minute window."""
-        key = f"rate:routes:{client_ip}"
+        key = f"rate:{self._scope}:{client_ip}"
         count = await self._client.eval(
             "local count = redis.call('INCR', KEYS[1]); "
             "if count == 1 then redis.call('EXPIRE', KEYS[1], 60); end; return count",
