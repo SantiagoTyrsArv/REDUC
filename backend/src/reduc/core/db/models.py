@@ -181,6 +181,8 @@ class AppUser(Base, TimestampMixin):
     password_hash: Mapped[str] = mapped_column(Text)
     role: Mapped[str] = mapped_column(Text)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    #: Embedded in every token; bumping it revokes all sessions of the user.
+    token_version: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
 
 
 class Verification(Base):

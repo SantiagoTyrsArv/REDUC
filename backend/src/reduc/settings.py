@@ -20,6 +20,9 @@ class Settings(BaseSettings):
     s3_access_key: str = ""
     s3_secret_key: str = ""
     jwt_secret: str = ""
+    jwt_access_minutes: int = 15
+    jwt_refresh_days: int = 7
+    login_attempts_per_minute: int = 10
     mapillary_token: str = ""
     streetview_api_key: str = ""
     model_detector_version: str = "det-v0.1.0"

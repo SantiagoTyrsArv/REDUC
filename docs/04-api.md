@@ -103,7 +103,8 @@ Ambas filtran por la versión publicada de cada región (funciones SQL en `db/ti
 | Método y ruta | Rol | Descripción |
 |---|---|---|
 | `POST /auth/login` | — | `{email,password}` → `{access_token,refresh_token}` |
-| `POST /auth/refresh` | — | |
+| `POST /auth/refresh` | — | `{refresh_token}` → par nuevo; el usuario debe seguir activo |
+| `GET /auth/me` | cualquiera | `{id,email,role}` del usuario autenticado |
 | `GET/POST /regions` | admin | listar / crear (`slug,name,boundary,utm_srid,config`) |
 | `PATCH /regions/{id}` | admin | |
 | `POST /regions/{id}/pipeline-runs` | admin | `{"stages":["all"] | [...], "map_version":"new" | "<id>"}` → 202 + run |
@@ -118,6 +119,8 @@ Ambas filtran por la versión publicada de cada región (funciones SQL en `db/ti
 | `GET /map-versions?region=` | admin | |
 | `POST /map-versions/{id}/publish` | admin | valida (§4) y publica |
 | `GET /metrics/region/{id}` | admin | cobertura, verificados, distribución de clases, precisión estimada |
+
+Autenticación: cabecera `Authorization: Bearer <access_token>` (HS256, 15 min; refresh 7 días). El rol se lee de la base de datos en cada petición, así que desactivar un usuario lo expulsa de inmediato, y cambiar su contraseña o rol (`app_user.token_version`) invalida todos sus tokens anteriores; `admin` incluye los permisos de `verifier`. `login` y `refresh` están limitados a 10 intentos/min por IP (`rate_limited`). Si `REDUC_JWT_SECRET` falta o tiene menos de 32 bytes, la API no emite ni acepta tokens y responde 503 `auth_unavailable`. Los usuarios se crean con `scripts/create_admin.py` (la contraseña se lee de `REDUC_ADMIN_PASSWORD` o se pide por consola; mínimo 12 caracteres).
 
 ## 4. Validaciones al publicar
 - Todos los tramos tienen `edge_accessibility`.
