@@ -1,0 +1,57 @@
+{
+  "_comment": "Recorded shape of GET graph.mapillary.com/images?bbox=...&fields=... (API v4). Ids, users and URLs are synthetic.",
+  "data": [
+    {
+      "id": "1000000000000001",
+      "captured_at": 1717243200000,
+      "computed_geometry": {"type": "Point", "coordinates": [0.0010, 0.0010]},
+      "computed_compass_angle": 92.5,
+      "camera_type": "perspective",
+      "thumb_2048_url": "https://scontent-bog1-1.xx.fbcdn.net/m1/v/t6/synthetic-1.jpg?stp=s2048x1536",
+      "creator": {"username": "mapeadora_campus", "id": "501"},
+      "width": 4032,
+      "height": 3024
+    },
+    {
+      "id": "1000000000000002",
+      "captured_at": 1717243260000,
+      "computed_geometry": {"type": "Point", "coordinates": [0.0020, 0.0010]},
+      "computed_compass_angle": 370.0,
+      "camera_type": "spherical",
+      "thumb_2048_url": "https://scontent-bog1-1.xx.fbcdn.net/m1/v/t6/synthetic-2.jpg?stp=s2048x1024",
+      "creator": {"username": "dron360", "id": "502"},
+      "width": 5760,
+      "height": 2880
+    },
+    {
+      "id": "1000000000000003",
+      "captured_at": 1717243320000,
+      "geometry": {"type": "Point", "coordinates": [0.0015, 0.0010]},
+      "camera_type": "perspective",
+      "thumb_2048_url": "https://scontent-bog1-1.xx.fbcdn.net/m1/v/t6/synthetic-3.jpg",
+      "creator": {"username": "sin_sfm", "id": "503"}
+    },
+    {
+      "id": "1000000000000004",
+      "captured_at": 1546300800000,
+      "computed_geometry": {"type": "Point", "coordinates": [0.0012, 0.0012]},
+      "computed_compass_angle": 180.0,
+      "camera_type": "perspective",
+      "thumb_2048_url": "https://scontent-bog1-1.xx.fbcdn.net/m1/v/t6/synthetic-4.jpg",
+      "creator": {"id": "504"},
+      "width": 2048,
+      "height": 1536
+    },
+    {
+      "id": "1000000000000005",
+      "captured_at": 1717243380000,
+      "computed_geometry": {"type": "Point", "coordinates": [0.0090, 0.0090]},
+      "computed_compass_angle": 10.0,
+      "camera_type": "perspective",
+      "thumb_2048_url": "https://scontent-bog1-1.xx.fbcdn.net/m1/v/t6/synthetic-5.jpg",
+      "creator": {"username": "fuera_del_poligono", "id": "505"},
+      "width": 2048,
+      "height": 1536
+    }
+  ]
+}

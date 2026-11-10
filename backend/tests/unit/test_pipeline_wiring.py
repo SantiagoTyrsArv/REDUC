@@ -63,3 +63,28 @@ def test_files_in_object_storage_and_unknown_sources(tmp_path: Path) -> None:
     assert isinstance(flat, ConstantElevation) and flat.elevation_m == 2600.0
     with pytest.raises(StageConfigurationError, match="no soportada"):
         deps.elevation_source(region({"elevation": {"source": "magic"}}))
+
+
+def test_image_sources_follow_the_region_config_and_street_view_stays_off(tmp_path: Path) -> None:
+    sources = [
+        {"provider": "mapillary", "enabled": True},
+        {"provider": "upload", "enabled": True},
+        {"provider": "streetview", "enabled": False},
+    ]
+    with_token = build_deps(Settings(data_dir=str(tmp_path), mapillary_token="t", streetview_api_key=""), None)
+    assert with_token.image_providers is not None
+
+    assert [provider.name for provider in with_token.image_providers(region({"image_sources": sources}))] == [
+        "mapillary"
+    ]
+    assert with_token.image_providers(region({})) == []
+    # Enabling Street View in a region is not enough without the deployment key.
+    sources[2]["enabled"] = True
+    with pytest.raises(StageConfigurationError, match="ADR-006"):
+        with_token.image_providers(region({"image_sources": sources}))
+    without_token = build_deps(Settings(data_dir=str(tmp_path), mapillary_token=""), None)
+    assert without_token.image_providers is not None
+    with pytest.raises(StageConfigurationError, match="MAPILLARY"):
+        without_token.image_providers(region({"image_sources": sources[:1]}))
+    with pytest.raises(StageConfigurationError, match="no soportada"):
+        with_token.image_providers(region({"image_sources": [{"provider": "flickr", "enabled": True}]}))

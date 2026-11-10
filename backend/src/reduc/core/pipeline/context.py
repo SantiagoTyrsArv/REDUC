@@ -9,7 +9,9 @@ from sqlalchemy.orm import Session
 
 from reduc.core.db.models import Region
 from reduc.core.providers.elevation.base import ElevationSource
+from reduc.core.providers.images.base import ImageProvider
 from reduc.core.providers.osm.graph import Bbox, OsmData
+from reduc.core.storage import ObjectStorage
 
 BATCH_SIZE = 500
 
@@ -31,6 +33,9 @@ class PipelineDeps:
     #: Receives the region and the buffered bounding box (west, south, east, north) to download.
     osm_source: Callable[[Region, Bbox], OsmData] | None = None
     elevation_source: Callable[[Region], ElevationSource | None] | None = None
+    #: Pull-based image sources enabled for the region (uploads arrive through the API instead).
+    image_providers: Callable[[Region], list[ImageProvider]] | None = None
+    storage: ObjectStorage | None = None
     extras: dict[str, Any] = field(default_factory=dict)
 
 
