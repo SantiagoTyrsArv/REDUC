@@ -81,6 +81,12 @@ class Edge(Base, TimestampMixin):
     length_m: Mapped[float]
     kind: Mapped[str] = mapped_column(Text)
     tags: Mapped[dict[str, Any]] = mapped_column(JSONB, default=dict)
+    #: Written by the elevation stage; signed in the source→target direction.
+    slope_pct: Mapped[float | None]
+    max_slope_pct: Mapped[float | None]
+    slope_source: Mapped[str | None] = mapped_column(Text)
+    #: Attributes measured in the field; they win over everything the pipeline computes.
+    overrides: Mapped[dict[str, Any]] = mapped_column(JSONB, default=dict, server_default="{}")
 
 
 class EdgeAccessibility(Base, TimestampMixin):
