@@ -427,6 +427,102 @@
         "title": "NoAccessibleRouteExtra",
         "type": "object"
       },
+      "PipelineRunOut": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "map_version_id": {
+            "format": "uuid",
+            "title": "Map Version Id",
+            "type": "string"
+          },
+          "map_version_number": {
+            "title": "Map Version Number",
+            "type": "integer"
+          },
+          "region_id": {
+            "format": "uuid",
+            "title": "Region Id",
+            "type": "string"
+          },
+          "stages": {
+            "items": {
+              "$ref": "#/components/schemas/StageRunOut"
+            },
+            "title": "Stages",
+            "type": "array"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "region_id",
+          "map_version_id",
+          "map_version_number",
+          "status",
+          "stages",
+          "created_at",
+          "started_at",
+          "finished_at"
+        ],
+        "title": "PipelineRunOut",
+        "type": "object"
+      },
+      "PipelineRunRequest": {
+        "properties": {
+          "map_version": {
+            "default": "new",
+            "maxLength": 64,
+            "title": "Map Version",
+            "type": "string"
+          },
+          "stages": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 16,
+            "title": "Stages",
+            "type": "array"
+          }
+        },
+        "title": "PipelineRunRequest",
+        "type": "object"
+      },
       "PoiOut": {
         "properties": {
           "accessible_entrance": {
@@ -905,6 +1001,73 @@
         "title": "ShortestOut",
         "type": "object"
       },
+      "StageRunOut": {
+        "properties": {
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "progress": {
+            "title": "Progress",
+            "type": "number"
+          },
+          "stage": {
+            "title": "Stage",
+            "type": "string"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "stats": {
+            "additionalProperties": true,
+            "title": "Stats",
+            "type": "object"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "stage",
+          "status",
+          "progress",
+          "stats",
+          "error",
+          "started_at",
+          "finished_at"
+        ],
+        "title": "StageRunOut",
+        "type": "object"
+      },
       "TokenPairOut": {
         "properties": {
           "access_token": {
@@ -1172,7 +1335,7 @@
     },
     "/v1/admin/auth/refresh": {
       "post": {
-        "description": "Issue a new token pair. The user must still exist and be active.",
+        "description": "Issue a new token pair. The user must still be active and its sessions not revoked.",
         "operationId": "refresh_v1_admin_auth_refresh_post",
         "requestBody": {
           "content": {
@@ -1227,6 +1390,355 @@
           }
         },
         "summary": "Refresh",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/v1/admin/pipeline-runs/{run_id}": {
+      "get": {
+        "operationId": "get_pipeline_run_v1_admin_pipeline_runs__run_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Run Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PipelineRunOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Pipeline Run",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/v1/admin/pipeline-runs/{run_id}/cancel": {
+      "post": {
+        "description": "Cancel a queued or running run; a finished run is returned unchanged.",
+        "operationId": "cancel_pipeline_run_v1_admin_pipeline_runs__run_id__cancel_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Run Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PipelineRunOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Cancel Pipeline Run",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/v1/admin/regions/{region_id}/pipeline-runs": {
+      "get": {
+        "description": "Most recent runs of a region.",
+        "operationId": "list_pipeline_runs_v1_admin_regions__region_id__pipeline_runs_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "region_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Region Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 50,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PipelineRunOut"
+                  },
+                  "title": "Response List Pipeline Runs V1 Admin Regions  Region Id  Pipeline Runs Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Pipeline Runs",
+        "tags": [
+          "admin"
+        ]
+      },
+      "post": {
+        "description": "Queue the requested stages on a new draft version, or on an existing draft.",
+        "operationId": "start_pipeline_run_v1_admin_regions__region_id__pipeline_runs_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "region_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Region Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PipelineRunRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PipelineRunOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Start Pipeline Run",
         "tags": [
           "admin"
         ]
