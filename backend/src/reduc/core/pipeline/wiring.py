@@ -9,6 +9,9 @@ from reduc.core.pipeline.context import PipelineDeps
 from reduc.core.pipeline.stages.import_osm import StageConfigurationError
 from reduc.core.providers.elevation.base import ConstantElevation, ElevationSource
 from reduc.core.providers.elevation.raster_file import RasterFileElevation
+from reduc.core.providers.images.base import ImageProvider, ProviderDisabledError
+from reduc.core.providers.images.mapillary import MapillaryProvider
+from reduc.core.providers.images.streetview import StreetViewProvider
 from reduc.core.providers.osm.graph import Bbox, OsmData
 from reduc.core.providers.osm.overpass import DEFAULT_ENDPOINT, OverpassSource
 from reduc.core.providers.osm.readers import read_osm_file
@@ -58,4 +61,24 @@ def build_deps(settings: Settings, storage: ObjectStorage | None) -> PipelineDep
             return ConstantElevation(float(config.get("elevation_m", 0.0)))
         raise StageConfigurationError(f"Fuente de elevación no soportada: {source}")
 
-    return PipelineDeps(osm_source=osm_source, elevation_source=elevation_source)
+    def image_providers(region: Region) -> list[ImageProvider]:
+        providers: list[ImageProvider] = []
+        for entry in (region.config or {}).get("image_sources") or []:
+            if not isinstance(entry, dict) or not entry.get("enabled"):
+                continue
+            name = entry.get("provider")
+            try:
+                if name == "mapillary":
+                    providers.append(MapillaryProvider(settings.mapillary_token))
+                elif name == "streetview":
+                    # Needs both the deployment key and the region switch (ADR-006).
+                    providers.append(StreetViewProvider(settings.streetview_api_key, enabled=True))
+                elif name != "upload":
+                    raise StageConfigurationError(f"Fuente de imágenes no soportada: {name}")
+            except ProviderDisabledError as error:
+                raise StageConfigurationError(str(error)) from error
+        return providers
+
+    return PipelineDeps(
+        osm_source=osm_source, elevation_source=elevation_source, image_providers=image_providers, storage=storage
+    )
