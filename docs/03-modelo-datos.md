@@ -172,6 +172,8 @@ Columnas que pgRouting necesita + atributos para el costo:
 }
 ```
 
+`osm.source`: `overpass` o `file` (con `path`). `elevation.source`: `raster_file` (con `path`), `flat` (`elevation_m`) o `none`. Un `path` es `s3://bucket/clave` o una ruta relativa a `REDUC_DATA_DIR`; no se aceptan rutas fuera de ese directorio.
+
 ## 4. Clases de superficie
 | surface_class | Ejemplos |
 |---|---|

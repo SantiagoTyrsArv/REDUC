@@ -92,6 +92,9 @@ REDUC_STREETVIEW_API_KEY=            # vacío = desactivado
 REDUC_MODEL_DETECTOR_VERSION=det-v0.1.0
 REDUC_MODEL_SURFACE_VERSION=surf-v0.1.0
 REDUC_CORS_ORIGINS=http://localhost:5173
+REDUC_DATA_DIR=data                  # extractos OSM y MDE locales
+REDUC_OVERPASS_ENDPOINT=             # vacío = overpass-api.de
+REDUC_WORKER_BROKER=redis            # stub = cola en memoria (pruebas)
 EXPO_PUBLIC_API_URL=http://localhost:8000
 EXPO_PUBLIC_TILES_URL=http://localhost:3000
 EXPO_PUBLIC_MAP_STYLE_URL=...

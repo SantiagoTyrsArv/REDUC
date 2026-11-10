@@ -108,8 +108,9 @@ Ambas filtran por la versión publicada de cada región (funciones SQL en `db/ti
 | `GET/POST /regions` | admin | listar / crear (`slug,name,boundary,utm_srid,config`) |
 | `PATCH /regions/{id}` | admin | |
 | `POST /regions/{id}/pipeline-runs` | admin | `{"stages":["all"] | [...], "map_version":"new" | "<id>"}` → 202 + run |
-| `GET /pipeline-runs/{id}` | admin | estado y etapas |
-| `POST /pipeline-runs/{id}/cancel` | admin | |
+| `GET /regions/{id}/pipeline-runs?limit=20` | admin | ejecuciones recientes de la región |
+| `GET /pipeline-runs/{id}` | admin | estado y etapas (`stage,status,progress,stats,error`) |
+| `POST /pipeline-runs/{id}/cancel` | admin | la etapa en curso se detiene en su siguiente lote y se revierte |
 | `POST /regions/{id}/images` | verifier | multipart; uno o varios JPEG con EXIF GPS; opcional `heading_deg` |
 | `GET /review-queue?region=&class=&status=unverified&sort=priority` | verifier | barreras paginadas |
 | `GET /barriers/{id}/observations` | verifier | detecciones con recortes |
@@ -121,6 +122,8 @@ Ambas filtran por la versión publicada de cada región (funciones SQL en `db/ti
 | `GET /metrics/region/{id}` | admin | cobertura, verificados, distribución de clases, precisión estimada |
 
 Autenticación: cabecera `Authorization: Bearer <access_token>` (HS256, 15 min; refresh 7 días). El rol se lee de la base de datos en cada petición, así que desactivar un usuario lo expulsa de inmediato, y cambiar su contraseña o rol (`app_user.token_version`) invalida todos sus tokens anteriores; `admin` incluye los permisos de `verifier`. `login` y `refresh` están limitados a 10 intentos/min por IP (`rate_limited`). Si `REDUC_JWT_SECRET` falta o tiene menos de 32 bytes, la API no emite ni acepta tokens y responde 503 `auth_unavailable`. Los usuarios se crean con `scripts/create_admin.py` (la contraseña se lee de `REDUC_ADMIN_PASSWORD` o se pide por consola; mínimo 12 caracteres).
+
+Ejecuciones: solo puede haber una activa por región (`409 conflict`). `map_version` distinto de `"new"` debe ser un borrador de la misma región. Si la cola no está disponible la ejecución queda `failed` y se responde `503 queue_unavailable`.
 
 ## 4. Validaciones al publicar
 - Todos los tramos tienen `edge_accessibility`.

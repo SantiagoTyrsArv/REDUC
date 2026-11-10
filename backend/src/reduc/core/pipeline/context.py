@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from reduc.core.db.models import Region
 from reduc.core.providers.elevation.base import ElevationSource
-from reduc.core.providers.osm.graph import OsmData
+from reduc.core.providers.osm.graph import Bbox, OsmData
 
 BATCH_SIZE = 500
 
@@ -28,7 +28,8 @@ class PipelineDeps:
     touches the network.
     """
 
-    osm_source: Callable[[Region], OsmData] | None = None
+    #: Receives the region and the buffered bounding box (west, south, east, north) to download.
+    osm_source: Callable[[Region, Bbox], OsmData] | None = None
     elevation_source: Callable[[Region], ElevationSource | None] | None = None
     extras: dict[str, Any] = field(default_factory=dict)
 

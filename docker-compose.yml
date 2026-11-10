@@ -93,7 +93,7 @@ services:
   worker:
     build:
       context: ./backend
-    command: uv run --no-sync python -m reduc.worker.main
+    command: uv run --no-sync dramatiq reduc.worker.main --processes 1 --threads 2
     environment:
       REDUC_DATABASE_URL: postgresql+psycopg://reduc:reduc@db:5432/reduc
       REDUC_REDIS_URL: redis://redis:6379/0

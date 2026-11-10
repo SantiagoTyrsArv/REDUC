@@ -1,5 +1,7 @@
 """Infrastructure dependencies used by API endpoints."""
 
+import uuid
+from collections.abc import Callable
 from functools import lru_cache
 
 import psycopg
@@ -36,3 +38,10 @@ def _storage() -> ObjectStorage | None:
 def get_storage() -> ObjectStorage | None:
     """Object storage, or None when S3 is not configured (photos are then omitted)."""
     return _storage()
+
+
+def get_enqueue_run() -> Callable[[uuid.UUID], None]:
+    """How a pipeline run reaches the worker. Tests override it to run or record the job in-process."""
+    from reduc.worker.main import enqueue_run
+
+    return enqueue_run
