@@ -190,6 +190,9 @@ def execute_run(factory: sessionmaker[Session], run_id: uuid.UUID, deps: Pipelin
             with factory() as session:
                 region = session.get(Region, region_id)
                 assert region is not None
+                # Defence in depth: a stage never writes to a version that stopped being a draft.
+                if session.scalar(select(MapVersion.status).where(MapVersion.id == version_id)) != "draft":
+                    raise PipelineRequestError("La versión ya no es un borrador")
                 ctx = StageContext(
                     session=session,
                     region=region,

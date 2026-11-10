@@ -10,10 +10,10 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any
 
-from sqlalchemy import select, text
+from sqlalchemy import func, select, text
 from sqlalchemy.orm import Session
 
-from reduc.core.db.models import MapVersion, Region
+from reduc.core.db.models import MapVersion, PipelineRun, Region
 from reduc.core.domain.profile import PROFILE_PRESETS, MobilityProfile, Weights
 from reduc.core.routing.engine import Coordinate, NoNearbyPathError, RoutingEngine
 from reduc.core.routing.pgrouting import PgrRoutingEngine
@@ -39,6 +39,10 @@ class VersionNotFoundError(Exception):
 
 class VersionStateError(Exception):
     """The version is not a draft (already published or archived)."""
+
+
+class VersionBusyError(Exception):
+    """A pipeline run is still queued or running on the version."""
 
 
 class PublishValidationError(Exception):
@@ -235,6 +239,15 @@ def publish_version(session: Session, version_id: uuid.UUID, engine: RoutingEngi
     session.refresh(version)
     if version.status != "draft":
         raise VersionStateError(version.status)
+    # `create_run` takes the same region lock, so no run can start on this version from here on:
+    # what gets validated is exactly what gets published.
+    busy: int = session.execute(
+        select(func.count())
+        .select_from(PipelineRun)
+        .where(PipelineRun.map_version_id == version_id, PipelineRun.status.in_(("queued", "running")))
+    ).scalar_one()
+    if busy:
+        raise VersionBusyError(str(version_id))
     issues = validate_version(session, version_id, engine)
     if issues:
         raise PublishValidationError(issues)

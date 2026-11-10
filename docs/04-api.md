@@ -119,7 +119,7 @@ Ambas filtran por la versión publicada de cada región (funciones SQL en `db/ti
 | `PATCH /edges/{id}/accessibility` | verifier | sobrescribir atributos medidos en campo (p. ej. pendiente con inclinómetro) |
 | `GET /map-versions?region=` | admin | |
 | `GET /map-versions/{id}/validation` | admin | simulacro de §4: `{publishable, issues:[{code,detail}]}` |
-| `POST /map-versions/{id}/publish` | admin | valida (§4) y publica; 422 con `extra.issues` si falla, 409 si no es borrador |
+| `POST /map-versions/{id}/publish` | admin | valida (§4) y publica; 422 con `extra.issues` si falla, 409 si no es borrador o si tiene una ejecución del pipeline en curso |
 | `GET /metrics/region/{id}` | admin | cobertura, verificados, distribución de clases, precisión estimada |
 
 Autenticación: cabecera `Authorization: Bearer <access_token>` (HS256, 15 min; refresh 7 días). El rol se lee de la base de datos en cada petición, así que desactivar un usuario lo expulsa de inmediato, y cambiar su contraseña o rol (`app_user.token_version`) invalida todos sus tokens anteriores; `admin` incluye los permisos de `verifier`. `login` y `refresh` están limitados a 10 intentos/min por IP (`rate_limited`). Si `REDUC_JWT_SECRET` falta o tiene menos de 32 bytes, la API no emite ni acepta tokens y responde 503 `auth_unavailable`. Los usuarios se crean con `scripts/create_admin.py` (la contraseña se lee de `REDUC_ADMIN_PASSWORD` o se pide por consola; mínimo 12 caracteres).

@@ -13,6 +13,7 @@ from reduc.api.schemas.admin import MapVersionAdminOut, ValidationIssueOut, Vali
 from reduc.api.schemas.public import ErrorOut
 from reduc.core.pipeline.publish import (
     PublishValidationError,
+    VersionBusyError,
     VersionNotFoundError,
     VersionStateError,
     publish_version,
@@ -88,6 +89,11 @@ def publish_map_version(version_id: uuid.UUID, session: SessionDep, user: AdminU
         session.rollback()
         raise ApiError(
             "conflict", "La versión no es un borrador", "Solo se publican versiones en borrador", 409
+        ) from error
+    except VersionBusyError as error:
+        session.rollback()
+        raise ApiError(
+            "conflict", "Hay una ejecución en curso", "Espera a que termine o cancélala antes de publicar", 409
         ) from error
     except PublishValidationError as error:
         session.rollback()

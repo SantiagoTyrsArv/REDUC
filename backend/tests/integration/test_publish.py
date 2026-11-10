@@ -16,6 +16,7 @@ from reduc.core.pipeline.context import PipelineDeps
 from reduc.core.pipeline.jobs import create_run, execute_run
 from reduc.core.pipeline.publish import (
     PublishValidationError,
+    VersionBusyError,
     VersionStateError,
     publish_version,
     validate_version,
@@ -273,3 +274,32 @@ PROFILE: dict[str, Any] = {
     "speed_mps": 0.9,
     "weights": {"slope": 1.0, "surface": 1.0, "uncertainty": 1.0},
 }
+
+
+def test_a_version_with_an_active_run_cannot_be_published(shared_engine: Engine) -> None:
+    with temporary_region(shared_engine) as region_id:
+        version_id = build_draft(shared_engine, region_id)
+        with Session(shared_engine) as session:
+            pending = create_run(session, region_id, ["compute_attributes"], str(version_id))
+            session.commit()
+            pending_id = pending.id
+
+            with pytest.raises(VersionBusyError):
+                publish_version(session, version_id)
+            session.rollback()
+            assert session.scalar(select(MapVersion.status).where(MapVersion.id == version_id)) == "draft"
+
+        # Once the run is over the version publishes, and a late delivery of a run on it does not write.
+        assert execute_run(factory_for(shared_engine), pending_id, sample_deps()) == "succeeded"
+        with Session(shared_engine) as session:
+            stale = create_run(session, region_id, ["compute_attributes"], str(version_id))
+            session.commit()
+            stale_id = stale.id
+            session.execute(text("UPDATE map_version SET status = 'published' WHERE id = :id"), {"id": version_id})
+            session.commit()
+        assert execute_run(factory_for(shared_engine), stale_id, sample_deps()) == "failed"
+        with Session(shared_engine) as session:
+            (stage,) = session.execute(
+                text("SELECT error FROM pipeline_stage_run WHERE pipeline_run_id = :id"), {"id": stale_id}
+            ).all()
+            assert "ya no es un borrador" in stage.error
