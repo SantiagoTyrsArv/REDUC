@@ -13,6 +13,8 @@ from reduc.api.errors import error_body
 
 REQUEST_COUNT = Counter("reduc_http_requests_total", "HTTP requests", ["method", "path", "status"])
 REQUEST_DURATION = Histogram("reduc_http_request_duration_seconds", "HTTP request duration", ["method", "path"])
+KNOWN_METHODS = frozenset({"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"})
+UNMATCHED_ROUTE = "unmatched"
 
 
 async def observe_request(request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
@@ -21,8 +23,12 @@ async def observe_request(request: Request, call_next: Callable[[Request], Await
     response = await call_next(request)
     duration = time.perf_counter() - started
     path = request.url.path
-    REQUEST_COUNT.labels(request.method, path, str(response.status_code)).inc()
-    REQUEST_DURATION.labels(request.method, path).observe(duration)
+    # Label with the route template, never the raw path: arbitrary URLs must not create time series.
+    route = request.scope.get("route")
+    label = getattr(route, "path", None) or UNMATCHED_ROUTE
+    method = request.method if request.method in KNOWN_METHODS else "OTHER"
+    REQUEST_COUNT.labels(method, label, str(response.status_code)).inc()
+    REQUEST_DURATION.labels(method, label).observe(duration)
     structlog.get_logger("reduc.http").info(
         "request_completed",
         method=request.method,

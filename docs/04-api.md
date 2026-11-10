@@ -91,7 +91,7 @@ Respuesta 200:
 ```
 
 ### `GET /v1/barriers/{id}`
-`{id,class,severity,location,attributes,confidence,n_observations,source,verification_status,photo_url?,attribution?}`. `photo_url` es URL firmada (15 min) del recorte, solo si la licencia lo permite.
+`{id,class,severity,location,attributes,confidence,n_observations,source,verification_status,photo_url?,attribution?}`. `photo_url` es URL firmada (15 min) del recorte, solo si la licencia lo permite. Las barreras `rejected` responden 404, igual que quedan fuera de la tesela `barrier`: solo se conservan para auditoría en el panel.
 
 ### Teselas (servidas por Martin, mismo dominio bajo `/tiles`)
 - `/tiles/edge_accessibility/{z}/{x}/{y}` — propiedades: `status`, `slope_pct`, `surface_class`, `verified`.
