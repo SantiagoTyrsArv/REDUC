@@ -45,6 +45,7 @@ class ImageProvider(Protocol):
 - **Street View (opcional, desactivado por defecto):** los Términos de Google Maps Platform restringen almacenar contenido y crear bases de datos derivadas. Solo se habilita si el equipo confirma un acuerdo/licencia que lo permita. Ver ADR-006.
 - Panorámicas 360° (Mapillary `spherical`): reproyectar a 4 vistas perspectiva (FOV 90°) a izquierda/derecha/adelante/atrás antes de detectar.
 - Deduplicar: si dos imágenes están a < 3 m y < 20° de rumbo, conservar la más reciente.
+- Implementación (`core/providers/images/`, etapa `ingest_images`): las imágenes pertenecen a la región, no a la versión, así que cada ejecución solo descarga lo nuevo (`UNIQUE(provider, external_id)`); una descarga fallida no detiene la etapa y se reintenta en la siguiente. Cada panorámica se guarda como cuatro filas `image` con `external_id = "<id>:front|right|back|left"`, FOV 90° y el rumbo ya girado, de modo que detección y geolocalización solo ven vistas en perspectiva. Si la licencia no permite almacenar (`can_store() = false`), no hay `storage_key` y los bytes solo existen durante esa ejecución. Con `max_images` se conservan las más recientes. Mapillary: una celda que devuelve una página completa (2 000) se divide en cuatro; el token viaja en la cabecera `Authorization`, y las miniaturas solo se descargan por HTTPS desde hosts de Mapillary.
 
 ## 5. Taxonomía de detección
 
