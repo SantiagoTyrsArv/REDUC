@@ -1,0 +1,75 @@
+# Flujo E2E de T-19: abrir app → elegir destino → ver ruta → entenderla sin el mapa.
+# Requisitos: `make up && make migrate && make seed` y un development build instalado.
+# Ejecutar: maestro test mobile/e2e/calcular-ruta.yaml
+appId: app.reduc.mobile
+---
+- launchApp:
+    clearState: true
+    permissions:
+      location: deny
+
+# Bienvenida: elegir plantilla de perfil.
+- assertVisible: "Rutas pensadas para tu silla"
+- tapOn:
+    id: "preset-manual"
+- tapOn:
+    id: "onboarding-start"
+
+# Ubicación de demostración dentro de la región sintética (no depende del GPS del emulador).
+- tapOn:
+    id: "map-settings"
+- scrollUntilVisible:
+    element:
+      id: "settings-demoLocation"
+- tapOn:
+    id: "settings-demoLocation"
+- back
+
+# Elegir destino.
+- tapOn:
+    id: "map-where-to"
+- tapOn:
+    id: "search-input"
+- inputText: "Biblio"
+- tapOn: "Biblioteca.*"
+
+# Ver la ruta y sus explicaciones.
+- extendedWaitUntil:
+    visible:
+      id: "route-card-0"
+    timeout: 15000
+- assertVisible: "Ruta recomendada"
+- scrollUntilVisible:
+    element: "¿Por qué no la ruta más corta?"
+- scrollUntilVisible:
+    element:
+      id: "route-segments"
+
+# La ruta se entiende sin ver el mapa: lista lineal de tramos e instrucciones.
+- tapOn:
+    id: "route-segments"
+- assertVisible:
+    id: "segments-intro"
+- assertVisible:
+    id: "segment-0"
+- scrollUntilVisible:
+    element: "Instrucciones"
+- back
+
+# Iniciar la navegación y simular el recorrido.
+- scrollUntilVisible:
+    element:
+      id: "route-start"
+- tapOn:
+    id: "route-start"
+- assertVisible:
+    id: "navigate-current"
+- tapOn:
+    id: "navigate-simulate"
+- extendedWaitUntil:
+    visible: "Has llegado a tu destino"
+    timeout: 120000
+- tapOn:
+    id: "navigate-finish"
+- assertVisible:
+    id: "map-where-to"
