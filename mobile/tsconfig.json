@@ -1,0 +1,10 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "forceConsistentCasingInFileNames": true,
+    "types": ["jest", "node"]
+  },
+  "include": ["app", "src", "__tests__", "expo-env.d.ts", "jest.setup.ts"]
+}
