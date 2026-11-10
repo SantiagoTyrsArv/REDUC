@@ -70,5 +70,14 @@ Las pruebas automáticas (`mobile/__tests__/screens.test.tsx`) recorren el árbo
 ## 6. Configuración
 Plantilla en `mobile/.env.example`. `EXPO_PUBLIC_API_URL`, `EXPO_PUBLIC_TILES_URL`, `EXPO_PUBLIC_MAP_STYLE_URL`, `EXPO_PUBLIC_SENTRY_DSN` (opcional). Perfiles `development`, `preview`, `production` en `eas.json`.
 
+El plugin Expo `mobile/plugins/with-windows-cmake-paths.js` configura
+`android.cmakeVersion=3.31.6` para todos los módulos Android. Su Ninja admite las rutas largas
+de los objetos nativos en Windows. Se aplica durante `expo prebuild` y conserva las rutas
+originales de las fuentes. Instrucciones para compilar e instalar por USB en `mobile/README.md`.
+También establece `expo.android.cmakeObjectPathMax=240` y admite `REDUC_NATIVE_BUILD_ROOT`
+como carpeta temporal corta para los objetos de la app cuando Windows no permite rutas largas.
+El empaquetado JavaScript declara los archivos `mobile/.env*` y las variables `EXPO_PUBLIC_*`
+como entradas de Gradle para regenerar el APK cuando cambien las URLs de sus servicios.
+
 ## 7. Panel de administración (admin/)
 React + Vite + MapLibre GL JS. Vistas: Login; Regiones (dibujar/subir polígono, config JSON con validación); Ejecuciones del pipeline (progreso por etapa, logs, relanzar etapa); **Cola de verificación** (mapa + recorte de foto + atajos de teclado: `A` confirmar, `R` rechazar, `E` editar, `→` siguiente); Subida de fotos (arrastrar, previsualizar GPS y rumbo); Versiones del mapa (diferencias con la publicada, botón publicar); Métricas.
