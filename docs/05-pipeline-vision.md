@@ -17,6 +17,8 @@ Objetivo: convertir imágenes de calle en **barreras geolocalizadas con confianz
 
 Cada etapa: función pura `run(stage_ctx) -> StageStats`, idempotente (borra/reescribe sus salidas para la `map_version` en borrador), procesa en lotes de 500 y reporta progreso.
 
+Orquestación (`core/pipeline/jobs.py`): cada etapa corre en su propia transacción; si falla o se cancela, el borrador queda como lo dejó la etapa anterior y la ejecución puede relanzarse desde ahí (`stages` + `map_version` existente). Una ejecución fallida no se reintenta sola. Las dependencias externas (OSM, elevación, imágenes, detector) llegan por `PipelineDeps`; `pipeline/wiring.py` las elige según `region.config` y las pruebas pasan dobles.
+
 ## 2. Importación OSM (etapa 1)
 - Consulta Overpass (o archivo `.osm.pbf` local) con `highway IN (footway, path, pedestrian, steps, living_street, residential, service, tertiary, secondary, primary, unclassified, corridor)`, `footway=sidewalk|crossing`, `sidewalk=*`, `kerb=*`, `elevator`, `ramp`, `incline`, `surface`, `smoothness`, `width`, `wheelchair`.
 - Si una calle no tiene aceras mapeadas como vías separadas, generar tramo peatonal sobre el eje con `kind='road_shoulder'` y penalización (ver ruteo).
