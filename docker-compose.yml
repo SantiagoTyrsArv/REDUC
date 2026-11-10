@@ -1,0 +1,140 @@
+services:
+  db:
+    build:
+      context: ./backend/db
+    environment:
+      POSTGRES_DB: reduc
+      POSTGRES_USER: reduc
+      POSTGRES_PASSWORD: reduc
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U reduc -d reduc"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  minio:
+    image: docker.io/pgsty/minio:RELEASE.2026-08-04T00-00-00Z
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${REDUC_S3_ACCESS_KEY:-reduc}
+      MINIO_ROOT_PASSWORD: ${REDUC_S3_SECRET_KEY:-reduc-secret}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  minio-init:
+    image: docker.io/pgsty/mc:RELEASE.2026-09-16T00-00-00Z
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - >
+        mc alias set local http://minio:9000
+        "$${MINIO_ROOT_USER}" "$${MINIO_ROOT_PASSWORD}" &&
+        mc mb --ignore-existing "local/$${REDUC_S3_BUCKET}"
+    environment:
+      MINIO_ROOT_USER: ${REDUC_S3_ACCESS_KEY:-reduc}
+      MINIO_ROOT_PASSWORD: ${REDUC_S3_SECRET_KEY:-reduc-secret}
+      REDUC_S3_BUCKET: ${REDUC_S3_BUCKET:-reduc}
+    restart: "no"
+
+  api:
+    build:
+      context: ./backend
+    command: uv run --no-sync uvicorn reduc.api.main:app --host 0.0.0.0 --port 8000
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      REDUC_DATABASE_URL: postgresql+psycopg://reduc:reduc@db:5432/reduc
+      REDUC_REDIS_URL: redis://redis:6379/0
+      REDUC_S3_ENDPOINT: http://minio:9000
+      REDUC_S3_PUBLIC_ENDPOINT: ${REDUC_S3_PUBLIC_ENDPOINT:-http://localhost:9000}
+      REDUC_CORS_ORIGINS: ${REDUC_CORS_ORIGINS:-http://localhost:5173,http://localhost:8081}
+      REDUC_JWT_SECRET: ${REDUC_JWT_SECRET:-dev-only-secret-change-me-please-32b}
+      REDUC_S3_BUCKET: ${REDUC_S3_BUCKET:-reduc}
+      REDUC_S3_ACCESS_KEY: ${REDUC_S3_ACCESS_KEY:-reduc}
+      REDUC_S3_SECRET_KEY: ${REDUC_S3_SECRET_KEY:-reduc-secret}
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/v1/health')"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  worker:
+    build:
+      context: ./backend
+    command: uv run --no-sync python -m reduc.worker.main
+    environment:
+      REDUC_DATABASE_URL: postgresql+psycopg://reduc:reduc@db:5432/reduc
+      REDUC_REDIS_URL: redis://redis:6379/0
+      REDUC_S3_ENDPOINT: http://minio:9000
+      REDUC_S3_PUBLIC_ENDPOINT: ${REDUC_S3_PUBLIC_ENDPOINT:-http://localhost:9000}
+      REDUC_CORS_ORIGINS: ${REDUC_CORS_ORIGINS:-http://localhost:5173,http://localhost:8081}
+      REDUC_JWT_SECRET: ${REDUC_JWT_SECRET:-dev-only-secret-change-me-please-32b}
+      REDUC_S3_BUCKET: ${REDUC_S3_BUCKET:-reduc}
+      REDUC_S3_ACCESS_KEY: ${REDUC_S3_ACCESS_KEY:-reduc}
+      REDUC_S3_SECRET_KEY: ${REDUC_S3_SECRET_KEY:-reduc-secret}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+
+  tiles:
+    image: ghcr.io/maplibre/martin:latest
+    command: ["--config", "/config/martin.yaml"]
+    environment:
+      DATABASE_URL: postgresql://reduc:reduc@db:5432/reduc
+    volumes:
+      - ./infra/martin.yaml:/config/martin.yaml:ro
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  admin:
+    build:
+      context: ./admin
+    ports:
+      - "5173:80"
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:
