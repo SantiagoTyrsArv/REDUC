@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<osm version="0.6" generator="reduc-fixture">
+  <node id="1" lat="0.0" lon="0.0">
+  </node>
+  <node id="20" lat="0.0" lon="0.00054">
+  </node>
+  <node id="2" lat="0.0" lon="0.00108">
+  </node>
+  <node id="3" lat="0.0" lon="0.00144">
+  </node>
+  <node id="4" lat="9e-05" lon="0.00108">
+  </node>
+  <node id="5" lat="0.00054" lon="0.00144">
+  </node>
+  <node id="6" lat="0.00054" lon="0.002">
+  </node>
+  <node id="7" lat="0.00018" lon="0.00108">
+    <tag k="kerb" v="raised"/>
+    <tag k="kerb:height" v="0.12"/>
+  </node>
+  <node id="8" lat="-0.0005" lon="0.00144">
+  </node>
+  <node id="9" lat="0.00054" lon="0.0025">
+  </node>
+  <node id="30" lat="0.003" lon="0.003">
+  </node>
+  <node id="31" lat="0.003" lon="0.0031">
+  </node>
+  <node id="32" lat="0.0031" lon="0.0031">
+  </node>
+  <way id="100">
+    <nd ref="1"/>
+    <nd ref="20"/>
+    <nd ref="2"/>
+    <nd ref="3"/>
+    <tag k="highway" v="footway"/>
+    <tag k="surface" v="asphalt"/>
+    <tag k="width" v="2"/>
+  </way>
+  <way id="101">
+    <nd ref="2"/>
+    <nd ref="4"/>
+    <tag k="highway" v="steps"/>
+    <tag k="step_count" v="6"/>
+  </way>
+  <way id="102">
+    <nd ref="3"/>
+    <nd ref="5"/>
+    <tag k="highway" v="residential"/>
+    <tag k="name" v="Calle de prueba"/>
+  </way>
+  <way id="103">
+    <nd ref="5"/>
+    <nd ref="6"/>
+    <tag k="highway" v="residential"/>
+    <tag k="sidewalk" v="separate"/>
+  </way>
+  <way id="104">
+    <nd ref="4"/>
+    <nd ref="7"/>
+    <tag k="highway" v="footway"/>
+    <tag k="footway" v="crossing"/>
+  </way>
+  <way id="105">
+    <nd ref="30"/>
+    <nd ref="31"/>
+    <nd ref="32"/>
+    <nd ref="30"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="106">
+    <nd ref="3"/>
+    <nd ref="8"/>
+    <tag k="highway" v="service"/>
+    <tag k="access" v="private"/>
+  </way>
+  <way id="107">
+    <nd ref="6"/>
+    <nd ref="999"/>
+    <nd ref="9"/>
+    <tag k="highway" v="path"/>
+  </way>
+</osm>
