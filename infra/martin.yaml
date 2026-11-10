@@ -1,0 +1,17 @@
+listen_addresses: "0.0.0.0:3000"
+
+postgres:
+  connection_string: $DATABASE_URL
+  # Only the functions of backend/db/tiles.sql are public; tables are never exposed directly.
+  auto_publish: false
+  functions:
+    edge_accessibility:
+      schema: public
+      function: tiles_edge_accessibility
+      minzoom: 10
+      maxzoom: 22
+    barrier:
+      schema: public
+      function: tiles_barrier
+      minzoom: 10
+      maxzoom: 22
